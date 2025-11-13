@@ -1,10 +1,53 @@
 ---
-- name: Run Processing test sketch
+- name: Copy and run Processing sketch
   hosts: all
   become: true
 
+  vars:
+    user_name: "student"
+    sketch_name: "8_circles"
+
+    # where Processing is installed
+    processing_version: "4.3"
+    processing_install_dir: "/opt/processing-{{ processing_version }}"
+    processing_java_bin: "/usr/local/bin/processing-java"
+
+    # local PDE file on control machine
+    pde_source: "./8_circles.pde"
+
+    # remote sketch paths
+    sketch_dir: "/home/{{ user_name }}/Desktop/MESH/concepts/{{ sketch_name }}"
+    pde_dest: "{{ sketch_dir }}/{{ sketch_name }}.pde"
+
   tasks:
-    
-    - name: Run Processing Script
-      command: processing-java --sketch=Desktop\MESH\concepts\test\8_circles.pde --run
-      when: now
+    - name: Ensure processing-java symlink exists
+      ansible.builtin.file:
+        src: "{{ processing_install_dir }}/processing-java"
+        dest: "{{ processing_java_bin }}"
+        state: link
+        mode: "0755"
+
+    - name: Ensure sketch directory exists
+      ansible.builtin.file:
+        path: "{{ sketch_dir }}"
+        state: directory
+        owner: "{{ user_name }}"
+        group: "{{ user_name }}"
+        mode: "0755"
+
+    - name: Copy PDE file into sketch directory
+      ansible.builtin.copy:
+        src: "{{ pde_source }}"
+        dest: "{{ pde_dest }}"
+        owner: "{{ user_name }}"
+        group: "{{ user_name }}"
+        mode: "0644"
+
+    - name: Run Processing sketch as {{ user_name }}
+      become: true
+      become_user: "{{ user_name }}"
+      ansible.builtin.command:
+        argv:
+          - "{{ processing_java_bin }}"
+          - "--sketch={{ sketch_dir }}"
+          - --run

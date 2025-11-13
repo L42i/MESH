@@ -1,12 +1,13 @@
 ---
-- name: Set desktop wallpaper
+- name: Set desktop wallpaper (LXDE / Raspberry Pi OS)
   hosts: all
   become: true
 
   vars:
-    wallpaper_source: "./background.jpg"        # local file
+    wallpaper_source: "./background.jpg"          # local file on controller
     wallpaper_dest: "/home/pi/Pictures/wallpaper.jpg"
-    lxde_config: "/home/pi/.config/pcmanfm/LXDE-pi/desktop-items-0.conf"
+    lxde_config_dir: "/home/pi/.config/pcmanfm/LXDE-pi"
+    lxde_config_file: "{{ lxde_config_dir }}/desktop-items-0.conf"
 
   tasks:
     - name: Ensure Pictures directory exists
@@ -17,7 +18,7 @@
         group: pi
         mode: "0755"
 
-    - name: Copy wallpaper to Pi
+    - name: Copy wallpaper file to Pi
       copy:
         src: "{{ wallpaper_source }}"
         dest: "{{ wallpaper_dest }}"
@@ -27,15 +28,15 @@
 
     - name: Ensure LXDE config directory exists
       file:
-        path: "/home/pi/.config/pcmanfm/LXDE-pi"
+        path: "{{ lxde_config_dir }}"
         state: directory
         owner: pi
         group: pi
         mode: "0755"
 
-    - name: Set wallpaper in LXDE config
+    - name: Set wallpaper path
       lineinfile:
-        path: "{{ lxde_config }}"
+        path: "{{ lxde_config_file }}"
         regexp: "^wallpaper="
         line: "wallpaper={{ wallpaper_dest }}"
         create: yes
@@ -45,11 +46,11 @@
 
     - name: Set wallpaper mode
       lineinfile:
-        path: "{{ lxde_config }}"
+        path: "{{ lxde_config_file }}"
         regexp: "^wallpaper_mode="
         line: "wallpaper_mode=stretch"
 
-    - name: Restart PCManFM to apply the wallpaper
+    - name: Restart PCManFM to apply wallpaper
       become: false
       shell: |
         pkill pcmanfm || true
