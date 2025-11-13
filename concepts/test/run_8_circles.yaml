@@ -1,0 +1,10 @@
+---
+- name: Run Processing test sketch
+  hosts: all
+  become: true
+
+  tasks:
+    
+    - name: Run Processing Script
+      command: processing-java --sketch=Desktop\MESH\concepts\test\8_circles.pde --run
+      when: now
