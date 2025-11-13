@@ -5,7 +5,7 @@
 
   vars:
     user_name: "student"
-    sketch_name: "8_circles"
+    sketch_name: "eight_circles"
 
     # where Processing is installed
     processing_version: "4.3"
@@ -13,7 +13,7 @@
     processing_java_bin: "/usr/local/bin/processing-java"
 
     # local PDE file on control machine
-    pde_source: "./8_circles.pde"
+    pde_source: "../eight_circles.pde"
 
     # remote sketch paths
     sketch_dir: "/home/{{ user_name }}/Desktop/MESH/concepts/{{ sketch_name }}"
