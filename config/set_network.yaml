@@ -1,0 +1,65 @@
+---
+- name: Configure WiFi on Raspberry Pis (single SSID)
+  hosts: all
+  become: true
+  serial: 1
+
+  vars_prompt:
+    - name: wifi_ssid
+      prompt: "Enter WiFi SSID"
+      private: no
+
+    - name: wifi_psk
+      prompt: "Enter WiFi password"
+      private: yes
+
+  vars:
+    wifi_iface: "wlan0"
+
+  tasks:
+    - name: Ensure NetworkManager is installed
+      ansible.builtin.package:
+        name: network-manager
+        state: present
+
+    - name: Ensure NetworkManager is running
+      ansible.builtin.service:
+        name: NetworkManager
+        enabled: true
+        state: started
+
+    # 1) Ensure / update the target WiFi connection
+    - name: Create/Update WiFi connection {{ wifi_ssid }}
+      community.general.nmcli:
+        conn_name: "{{ wifi_ssid }}"
+        ifname: "{{ wifi_iface }}"
+        type: wifi
+        ssid: "{{ wifi_ssid }}"
+        autoconnect: yes
+        state: present
+        wifi_sec:
+          key-mgmt: wpa-psk     # <-- note hyphen
+          psk: "{{ wifi_psk }}"
+
+    # 2) Try to bring it up; if this fails, STOP – do not delete old WiFi
+    - name: Bring up WiFi connection {{ wifi_ssid }}
+      ansible.builtin.command: "nmcli connection up '{{ wifi_ssid }}'"
+      register: nmcli_up
+      changed_when: "'successfully activated' in nmcli_up.stdout"
+      failed_when: nmcli_up.rc != 0
+
+    # 3) Only if the above succeeded, clean up other WiFi profiles
+    - name: Get all WiFi connections
+      ansible.builtin.command: nmcli -t -f NAME,TYPE connection show
+      register: nmcli_connections
+      changed_when: false
+
+    - name: Remove WiFi connections except {{ wifi_ssid }}
+      community.general.nmcli:
+        conn_name: "{{ item.split(':')[0] }}"
+        type: wifi
+        state: absent
+      loop: "{{ nmcli_connections.stdout_lines | select('search', ':wifi$') | list }}"
+      when:
+        - nmcli_connections.stdout_lines is defined
+        - item.split(':')[0] != wifi_ssid
