@@ -1,0 +1,60 @@
+---
+- name: Install Processing on Raspberry Pi
+  hosts: all
+  become: yes
+  vars:
+    processing_version: "4.3"  # Change to the desired version
+    processing_dir: "/opt/processing"
+    processing_link: "https://download.processing.org/processing-{{ processing_version }}-arm64.tgz"
+    # Use armv6hf.tgz or arm64.tgz depending on your Pi OS architecture
+
+  tasks:
+
+    - name: Ensure dependencies are installed
+      apt:
+        name:
+          - openjdk-17-jdk
+          - wget
+          - tar
+        state: present
+        update_cache: yes
+
+    - name: Create installation directory
+      file:
+        path: "{{ processing_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Download Processing tarball
+      get_url:
+        url: "{{ processing_link }}"
+        dest: "/tmp/processing.tgz"
+        mode: '0644'
+
+    - name: Extract Processing
+      unarchive:
+        src: "/tmp/processing.tgz"
+        dest: "{{ processing_dir }}"
+        remote_src: yes
+        extra_opts: [--strip-components=1]
+
+    - name: Create symbolic link for easy access
+      file:
+        src: "{{ processing_dir }}/processing"
+        dest: "/usr/local/bin/processing"
+        state: link
+
+    - name: Clean up temporary files
+      file:
+        path: "/tmp/processing.tgz"
+        state: absent
+
+    - name: Verify installation
+      command: processing --version
+      register: processing_version_output
+      ignore_errors: yes
+
+    - debug:
+        msg: "Processing version: {{ processing_version_output.stdout | default('Could not determine version') }}"

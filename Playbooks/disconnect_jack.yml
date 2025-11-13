@@ -1,0 +1,14 @@
+---
+- name: Disconnect!
+  hosts: myservers
+  gather_facts: false
+  tasks:
+
+
+  # Launch JACK stuff
+  - name: Disconnect ALL!
+    shell: aj-snapshot -x
+    async: 2592000 # run for 1 month
+    poll: 0
+  vars:
+    base_port: 4464
