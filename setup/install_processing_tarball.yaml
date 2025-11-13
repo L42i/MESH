@@ -1,0 +1,52 @@
+---
+- name: Install Processing from tarball
+  hosts: all
+  become: true
+
+  vars:
+    processing_version: "4.3"
+    processing_build: "processing-1293-4.3"
+    processing_arch: "linux-arm64"
+
+    processing_url: "https://github.com/benfry/processing4/releases/download/{{ processing_build }}/processing-{{ processing_version }}-{{ processing_arch }}.tgz"
+
+    install_root: "/opt"
+    install_dir: "{{ install_root }}/processing-{{ processing_version }}"
+    symlink_dir: "/opt/processing"
+
+    bin_processing: "/usr/local/bin/processing"
+    bin_processing_java: "/usr/local/bin/processing-java"
+
+  tasks:
+    - name: Download Processing tarball
+      ansible.builtin.get_url:
+        url: "{{ processing_url }}"
+        dest: "/tmp/processing-{{ processing_version }}.tgz"
+        mode: "0644"
+
+    - name: Extract Processing into /opt (idempotent)
+      ansible.builtin.unarchive:
+        src: "/tmp/processing-{{ processing_version }}.tgz"
+        dest: "{{ install_root }}"
+        remote_src: true
+        creates: "{{ install_dir }}"
+
+    - name: Symlink /opt/processing -> versioned install dir
+      ansible.builtin.file:
+        src: "{{ install_dir }}"
+        dest: "{{ symlink_dir }}"
+        state: link
+
+    - name: Symlink 'processing' into /usr/local/bin
+      ansible.builtin.file:
+        src: "{{ symlink_dir }}/processing"
+        dest: "{{ bin_processing }}"
+        state: link
+        mode: "0755"
+
+    - name: Symlink 'processing-java' into /usr/local/bin
+      ansible.builtin.file:
+        src: "{{ symlink_dir }}/processing-java"
+        dest: "{{ bin_processing_java }}"
+        state: link
+        mode: "0755"
