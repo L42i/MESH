@@ -27,3 +27,6 @@ After this, all playbooks can be run without the -k flag - and without password 
 
     
     $ ansible-playbook -i pis.ini install_supercollider.yml
+
+
+Processing: needs to be from tarball (github releases) NOT from snap - that one is missing the processing-java
