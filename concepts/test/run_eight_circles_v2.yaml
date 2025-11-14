@@ -8,11 +8,13 @@
     sketch_name: "eight_circles"
 
     # remote sketch paths
-    sketch_dir: "/home/{{ user_name }}/Desktop/MESH/concepts/test{{ sketch_name }}"
+    sketch_dir: "/home/{{ user_name }}/Desktop/MESH/concepts/{{ sketch_name }}"
     
   tasks:
 
     - name: Run Processing sketch as {{ user_name }}
       become: true
       become_user: "{{ user_name }}"
-      ansible.builtin.command: processing-java --sketch={{ sketch_dir }} --run
+      environment:
+        DISPLAY: ":0"
+      ansible.builtin.command: processing-java --sketch=/home/student/Desktop/MESH/concepts/eight_circles --run
