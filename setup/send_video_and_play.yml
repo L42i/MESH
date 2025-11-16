@@ -1,0 +1,48 @@
+---
+- name: Copy and play video using VLC on remote display
+  hosts: all
+  become: false
+
+  vars:
+    # These are passed in via -e
+    # local_video_dir: ""
+    # remote_dir: ""
+    # remote_video: ""
+    # EXAMPLE One-liner --> ansible-playbook -i config/pis.ini setup/send_video_and_play.yml -e "local_video_dir=/mnt/c/users/henry/desktop/mesh/assets remote_dir=/home/student/Desktop/MESH remote_video=test_video.mp4"
+
+  tasks:
+
+    - name: Ensure required variables are provided
+      assert:
+        that:
+          - local_video_dir is defined
+          - remote_dir is defined
+          - remote_video is defined
+        fail_msg: >
+          Missing required variables!
+          You must run this playbook with:
+          -e "local_video_dir=/path remote_dir=/path remote_video=filename.mp4"
+
+    - name: Ensure remote directory exists
+      file:
+        path: "{{ remote_dir }}"
+        state: directory
+
+    - name: Check if video already exists on remote
+      stat:
+        path: "{{ remote_dir }}/{{ remote_video }}"
+      register: video_status
+
+    - name: Rsync video if missing
+      synchronize:
+        src: "{{ local_video_dir }}/{{ remote_video }}"
+        dest: "{{ remote_dir }}/"
+      when: not video_status.stat.exists
+
+    - name: Play video fullscreen on remote display 0 using VLC
+      shell: |
+        export DISPLAY=:0
+        nohup vlc --fullscreen --play-and-exit "{{ remote_dir }}/{{ remote_video }}" \
+          >/dev/null 2>&1 &
+      async: 5
+      poll: 0

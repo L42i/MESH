@@ -1,0 +1,47 @@
+---
+- name: Copy and play sketch on remote display
+  hosts: all
+  become: false
+
+  vars:
+    # These are passed in via -e
+    # local_sketch_dir: ""
+    # remote_dir: ""
+    # sketch_name: ""
+    # EXAMPLE One-liner --> ansible-playbook -i config/pis.ini concepts/test/send_sketch_and_play.yml -e "local_sketch_dir=/mnt/c/users/henry/desktop/mesh/concepts/test remote_dir=/home/student/Desktop/MESH/concepts sketch_name=eight_circles"
+
+  tasks:
+
+    - name: Ensure required variables are provided
+      assert:
+        that:
+          - local_sketch_dir is defined
+          - remote_dir is defined
+          - sketch_name is defined
+        fail_msg: >
+          Missing required variables!
+          You must run this playbook with:
+          -e "local_sketch_dir=/path remote_dir=/path sketch_name=filename.mp4"
+
+    - name: Ensure remote directory exists
+      file:
+        path: "{{ remote_dir }}"
+        state: directory
+
+    - name: Check if sketch already exists on remote
+      stat:
+        path: "{{ remote_dir }}/{{ sketch_name }}"
+      register: sketch_status
+
+    - name: Rsync sketch if missing
+      synchronize:
+        src: "{{ local_sketch_dir }}/{{ sketch_name }}"
+        dest: "{{ remote_dir }}/"
+      when: not sketch_status.stat.exists
+
+    - name: Run Processing sketch as student
+      become: true
+      become_user: student
+      environment:
+        DISPLAY: ":0"
+      ansible.builtin.command: processing-java --sketch={{ remote_dir }}/{{ sketch_name}} --run
