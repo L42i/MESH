@@ -5,8 +5,7 @@ int N = 8;
 Mover[] movers;
 
 void setup() {
-  size(800, 600);
-  //smooth();
+  fullScreen(0);
   blendMode(SCREEN); // overlapping colors combine nicely
   movers = new Mover[N];
   for (int i = 0; i < N; i++) {
@@ -16,23 +15,29 @@ void setup() {
 
 void draw() {
   background(0);
-  
-    for (int i = 0; i < N; i++) {
+
+  // Connection lines
+  for (int i = 0; i < N; i++) {
     for (int j = i + 1; j < N; j++) {
       float d = dist(movers[i].pos.x, movers[i].pos.y,
                      movers[j].pos.x, movers[j].pos.y);
-      if (d < 200) {
+
+      if (d < 400) {
         // Alpha fades with distance
-        float a = map(d, 0, 200, 180, 0);
+        float a = map(d, 0, 400, 180, 0);
+
         // Color = mid blend between both circles
         color c = lerpColor(movers[i].baseColor, movers[j].baseColor, 0.5);
-        stroke(red(c), blue(c), green(c), a);
+
+        stroke(red(c), green(c), blue(c), a);
+
         strokeWeight(5);
         line(movers[i].pos.x, movers[i].pos.y, movers[j].pos.x, movers[j].pos.y);
       }
     }
-    }
-    
+  }
+
+  // Draw circles
   for (Mover m : movers) {
     m.update();
     m.display();
@@ -64,14 +69,18 @@ class Mover {
     // Distance from screen center
     float d = dist(pos.x, pos.y, width/2, height/2);
 
-    // Map distance to brightness (closer = brighter)
-    float a = map(d, 0, max(width, height)/2, 255, 30);
-    a = constrain(a, 100, 255);
+    // FIX 2 — better brightness falloff (edge gets dim)
+    float a = map(d, 0, max(width, height)/2, 255, 0);
+    a = constrain(a, 0, 255);
 
     noStroke();
+
+    // Soft layered glow
     for (int i = 5; i > 0; i--) {
-  fill(red(baseColor), green(baseColor), blue(baseColor), a * (i / 5.0));
-  ellipse(pos.x, pos.y, radius * i/5.0, radius * i/5.0);
+      float t = i / 5.0;
+      fill(red(baseColor), green(baseColor), blue(baseColor), a * t);
+      float r = radius * t;
+      ellipse(pos.x, pos.y, r, r);
     }
   }
 }
