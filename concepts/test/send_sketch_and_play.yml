@@ -5,23 +5,24 @@
 
   vars:
     # These are passed in via -e
-    # local_sketch_dir: ""
-    # remote_dir: ""
-    # sketch_name: ""
-    # EXAMPLE One-liner --> ansible-playbook -i config/pis.ini concepts/test/send_sketch_and_play.yml -e "local_sketch_dir=/mnt/c/users/henry/desktop/mesh/concepts/test remote_dir=/home/student/Desktop/MESH/concepts sketch_name=eight_circles"
+    # local_sketch_dir=/path/to/local/files
+    # desktop_subfolder=MESH
+    # remote_sketch=one_circle
 
+    # Build remote_dir automatically per computer
+    remote_dir: "{{ ansible_env.HOME }}/Desktop/{{ desktop_subfolder }}"
   tasks:
 
     - name: Ensure required variables are provided
       assert:
         that:
           - local_sketch_dir is defined
-          - remote_dir is defined
+          - desktop_subfolder is defined
           - sketch_name is defined
         fail_msg: >
           Missing required variables!
           You must run this playbook with:
-          -e "local_sketch_dir=/path remote_dir=/path sketch_name=filename.mp4"
+          -e "local_sketch_dir=/path desktop_subfolder=/path sketch_name=filename.mp4"
 
     - name: Ensure remote directory exists
       file:
