@@ -1,0 +1,37 @@
+---
+- name: Mirror local folder to remote Desktop (exact match)
+  hosts: all
+  become: false
+
+  vars:
+    # Passed via -e:
+    # local_folder=/path/to/local/folder
+    # desktop_subfolder=FolderName
+    # Final: /home/<USER>/Desktop/FolderName
+
+    remote_folder: "{{ ansible_env.HOME }}/Desktop/{{ desktop_subfolder }}"
+
+  tasks:
+
+    - name: Ensure required variables are provided
+      assert:
+        that:
+          - local_folder is defined
+          - desktop_subfolder is defined
+        fail_msg: >
+          Missing required variables!
+          Example:
+          -e "local_folder=/path desktop_subfolder=FOLDER"
+
+    - name: Ensure remote folder exists
+      file:
+        path: "{{ remote_folder }}"
+        state: directory
+
+    - name: Mirror local folder to remote
+      synchronize:
+        src: "{{ local_folder }}/"
+        dest: "{{ remote_folder }}/"
+        recursive: yes
+        delete: yes       # <-- ensures exact match
+        mode: push
