@@ -9,6 +9,8 @@
     # desktop_subfolder=MESH
     # remote_video=myvideo.mp4
 
+    # EXAMPLE ansible-playbook setup/send_video_and_play.yml -i config/bees.ini -e "local_video_dir=assets desktop_subfolder=MESH/assets remote_video=test_video.mp4"
+
     # Build remote_dir automatically per computer
     remote_dir: "{{ ansible_env.HOME }}/Desktop/{{ desktop_subfolder }}"
 

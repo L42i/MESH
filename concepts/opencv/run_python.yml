@@ -1,0 +1,36 @@
+---
+- name: Python script on remote display
+  hosts: all
+  become: false
+
+  vars:
+    # These variables should be passed via -e
+    # desktop_subfolder=MESH
+    # python_script=one_circle.py
+
+    # Build remote_dir automatically per computer
+    remote_dir: "{{ ansible_env.HOME }}/Desktop/{{ desktop_subfolder }}"
+
+  tasks:
+
+    - name: Ensure required variables are provided
+      assert:
+        that:
+          - desktop_subfolder is defined
+          - python_script is defined
+        fail_msg: >
+          Missing required variables!
+          You must run this playbook with:
+          -e "desktop_subfolder=MESH python_script=one_circle.py"
+
+    - name: Ensure remote directory exists
+      file:
+        path: "{{ remote_dir }}"
+        state: directory
+
+    - name: Run Python script on Pi display
+      become: true
+      become_user: student
+      environment:
+        DISPLAY: ":0"
+      ansible.builtin.command: python3 {{ remote_dir }}/{{ python_script }}

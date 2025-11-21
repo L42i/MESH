@@ -1,0 +1,36 @@
+---
+- name: Install OpenCV system-wide on Raspberry Pis
+  hosts: all
+  become: true
+
+  vars:
+    system_dependencies:
+      - python3-dev
+      - libjpeg-dev
+      - libpng-dev
+      - libtiff-dev
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install system dependencies
+      apt:
+        name: "{{ system_dependencies }}"
+        state: present
+
+    - name: Install OpenCV system-wide (override PEP 668)
+      pip:
+        name: opencv-python
+        executable: pip3
+        extra_args: "--break-system-packages"
+
+    - name: Verify OpenCV installation
+      command: python3 -c "import cv2; print(cv2.__version__)"
+      register: opencv_version
+      ignore_errors: yes
+
+    - name: Show OpenCV version
+      debug:
+        msg: "Installed OpenCV version: {{ opencv_version.stdout }}"
