@@ -1,28 +1,28 @@
 ---
-- name: Copy and play sketch on remote display
+- name: Play sketch on remote display
   hosts: all
-  become: true
+  become: false
 
   vars:
     # These are passed in via -e
-    # local_sketch_dir=/path/to/local/files
     # desktop_subfolder=MESH
     # remote_sketch=one_circle
 
     # Build remote_dir automatically per computer
-    remote_dir: "{{ ansible_env.HOME }}/Desktop/{{ desktop_subfolder }}"
+  
+    # NOTE: NEED TO RUN "xhost +local:" on bee with display connected 
+    remote_dir: "/home/{{ ansible_user }}/Desktop/{{ desktop_subfolder }}"
   tasks:
 
     - name: Ensure required variables are provided
       assert:
         that:
-          - local_sketch_dir is defined
           - desktop_subfolder is defined
           - sketch_name is defined
         fail_msg: >
           Missing required variables!
           You must run this playbook with:
-          -e "local_sketch_dir=/path desktop_subfolder=/path sketch_name=filename.mp4"
+          -e "desktop_subfolder=/path sketch_name=filename.mp4"
 
     - name: Ensure remote directory exists
       file:
@@ -34,15 +34,9 @@
         path: "{{ remote_dir }}/{{ sketch_name }}"
       register: sketch_status
 
-    - name: Rsync sketch if missing
-      synchronize:
-        src: "{{ local_sketch_dir }}/{{ sketch_name }}"
-        dest: "{{ remote_dir }}/"
-      when: not sketch_status.stat.exists
-
-    - name: Run Processing sketch as student
-      become: true
-      become_user: student
+    - name: Run Processing sketch on the remote display
+      become: false
       environment:
-        DISPLAY: ":0"
-      ansible.builtin.command: processing-java --sketch={{ remote_dir }}/{{ sketch_name}} --run
+        DISPLAY: ":1"   
+        XAUTHORITY: "/home/{{ ansible_user }}/.Xauthority"
+      ansible.builtin.command: processing-java --sketch={{ remote_dir }}/{{ sketch_name }} --run
