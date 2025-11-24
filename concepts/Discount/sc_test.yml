@@ -5,8 +5,10 @@
 
   tasks:
 
-    - name: play with sclang
+    - name: play with sclang and save log to Desktop
       ansible.builtin.shell: |
         export QT_QPA_PLATFORM=offscreen
-        sclang /home/{{ ansible_user }}/Desktop/MESH/concepts/Discount/play_wav.scd /home/{{ ansible_user }}/Desktop/MESH/assets/test_audio.wav
-      
+        sclang /home/{{ ansible_user }}/Desktop/MESH/concepts/Discount/play_wav.scd /home/{{ ansible_user }}/Desktop/MESH/assets/test_audio.wav \
+          > /home/{{ ansible_user }}/Desktop/discount_log.txt 2>&1
+      args:
+        executable: /bin/bash
