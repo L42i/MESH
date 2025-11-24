@@ -1,36 +1,27 @@
 // play_wav.scd
 // Usage: sclang play_wav.scd /path/to/file.wav
 
-
-var path = thisProcess.argv[0];
+var path = thisProcess.argv[0];  // assuming you call: sclang play_wav.scd /path/to/file.wav
 
 path.postln;
 
-
-s.waitForBoot(
-	{
-
-    var buf, player;
-
+s.waitForBoot {
+    var buf;
 
     buf = Buffer.read(s, path);
+    s.sync;
 
-	s.sync;
-
-    player = {
-        var play = PlayBuf.ar(
+    {
+        var sig = PlayBuf.ar(
             numChannels: buf.numChannels,
             bufnum: buf.bufnum,
             rate: 1,
-            loop: 0,
-            doneAction: 2      // free synth when done
+            loop: 1,       // loop forever
+            doneAction: 0   // don't auto-free
         );
-        Out.ar(0, play);
+        Out.ar(0, sig);
     }.play;
 
-    // stop the whole process once the buffer is done
-    buf.duration.wait;
-    "Done.".postln;
-    buf.free;
-    0.exit;
-});
+    "Started looping...".postln;
+    // DO NOT wait buf.duration, DO NOT free, DO NOT exit.
+};
