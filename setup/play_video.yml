@@ -30,9 +30,9 @@
         path: "{{ remote_dir }}"
         state: directory
 
-    - name: Play video fullscreen on remote display 0 using VLC
+    - name: Play video fullscreen on remote display 1 using VLC
       shell: |
-        export DISPLAY=:0
+        export DISPLAY=:1
         nohup vlc --fullscreen --play-and-exit "{{ remote_dir }}/{{ remote_video }}" \
           >/dev/null 2>&1 &
       async: 5

@@ -1,0 +1,16 @@
+---
+- name: PLay a wav file with supercollider
+  hosts: all
+  become: false  
+
+  tasks:
+
+    - name: play with sclang and save log to Desktop
+      ansible.builtin.shell: |
+        export QT_QPA_PLATFORM=offscreen
+        sclang /home/{{ ansible_user }}/Desktop/MESH/concepts/Discount/play_wav_once.scd /home/{{ ansible_user }}/Desktop/MESH/assets/test_audio.wav \
+          > /home/{{ ansible_user }}/Desktop/discount_log.txt 2>&1
+      async: 3600
+      poll: 0
+      args:
+        executable: /bin/bash
