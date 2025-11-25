@@ -9,7 +9,7 @@
 
   tasks:
     
-    - name: Play video fullscreen on remote display 0 using VLC
+    - name: Play video fullscreen on Pis
       shell: |
         export DISPLAY=:0
         nohup vlc --fullscreen --play-and-exit "{{ video_dir }}" \
@@ -17,7 +17,8 @@
       async: 5
       poll: 0
 
-    - name: play with sclang 
+
+    - name: play run sc_discount on Pis with sclang
       ansible.builtin.shell: |
         export QT_QPA_PLATFORM=offscreen
         sclang /home/{{ ansible_user }}/Desktop/MESH/concepts/Discount/sc_discount.scd {{ audio_dir }}{{ discount }}.wav
@@ -27,22 +28,22 @@
         executable: /bin/bash
 
 
-
 - name: Discount --> Bees
   hosts: bees
   become: false  
 
   vars:
-
     video_dir: "{{ ansible_env.HOME }}/Desktop/MESH/concepts/Discount/DiscountVideoScore.mp4"
 
   tasks:
     
-    - name: Play video fullscreen on remote display 1 using VLC
+    - name: Play video fullscreen on Bees
       shell: |
         export DISPLAY=:1
         nohup vlc --fullscreen --play-and-exit "{{ video_dir }}" \
           >/dev/null 2>&1 &
       async: 5
       poll: 0
+
+      
     
