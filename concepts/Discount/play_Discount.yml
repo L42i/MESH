@@ -4,8 +4,8 @@
   become: false  
 
   vars:
-    audio_dir: "/home/{{ ansible_user }}/Desktop/MESH/media/DISCOUNT_SUBMIX_"
-    video_dir: "{{ ansible_env.HOME }}/Desktop/MESH/media/DiscountVideoScore.mp4"
+    audio_dir: "/home/{{ ansible_user }}/Desktop/MESH/media/DISCOUNT/DISCOUNT_SUBMIX_"
+    video_dir: "{{ ansible_env.HOME }}/Desktop/MESH/media/DISCOUNT/DiscountVideoScore.mp4"
     jack_hw_device: "hw:Gen"   
 
   tasks:
@@ -45,7 +45,7 @@
   become: false  
 
   vars:
-   video_dir: "{{ ansible_env.HOME }}/Desktop/MESH/media/DiscountVideoScore.mp4"
+   video_dir: "{{ ansible_env.HOME }}/Desktop/MESH/media/DISCOUNT/DiscountVideoScore.mp4"
 
   tasks:
     

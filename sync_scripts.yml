@@ -20,4 +20,5 @@
         # specifies the transfer direction: 'push' from control to remote (default)
         mode: push 
         rsync_opts:
-          - "--exclude=./media/ --exclude=./Recordings/"
+          - "--exclude=./media/"
+          - "--exclude=./Recordings/"
