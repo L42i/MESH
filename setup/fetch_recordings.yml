@@ -1,0 +1,11 @@
+---
+- name: Fetch remote directory to local
+  hosts: all
+
+  tasks:
+    - name: Synchronize remote directory to per-host local folder
+      ansible.posix.synchronize:
+        src: /home/student/Desktop/Recordings/   # trailing slash is OK here
+        dest: "./Recordings/{{ inventory_hostname }}/"
+        mode: pull
+        recursive: yes
