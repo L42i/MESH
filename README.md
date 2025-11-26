@@ -1,6 +1,7 @@
 # MESH
 
-## Prepare
+## Prepare Data
+
 
 After cloning this repository, download the media (audio and video files) and place them in a directory ``media/`` in the root directory of this repository.
 
@@ -9,7 +10,7 @@ https://gtvault.sharepoint.com/:f:/s/L42II-CIC_Asia/IgCdoEeOcv1BTbRsNfRwcvLZAYwc
 
 
 
-## Getting Started
+## Getting Started with Ansible
 
 To run the first steps without SSH key:
 
@@ -37,3 +38,13 @@ After this, all playbooks can be run without the -k flag - and without password 
 
 
 Processing: needs to be from tarball (github releases) NOT from snap - that one is missing the processing-java
+
+----
+
+## Syncing Media
+
+- Run the ``sync_mesh.yml`` playbook to get all media to the remote nodes.
+
+----
+
+## 
