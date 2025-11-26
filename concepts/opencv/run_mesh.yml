@@ -4,7 +4,7 @@
   become: false  
 
   vars:
-    python_dir: "/home/{{ ansible_user }}/Desktop/MESH/concepts/opencv/cv_test_vector.py"
+    python_dir: "/home/{{ ansible_user }}/Desktop/MESH/concepts/installation/cv_test_vector.py"
     video_dir: "{{ ansible_env.HOME }}/Desktop/MESH/concepts/Discount/DiscountVideoScore.mp4"
 
   tasks:
@@ -19,7 +19,7 @@
       poll: 0
 
 
-- name: Discount --> Bees
+- name: Mesh --> Bees
   hosts: bees
   become: false  
 

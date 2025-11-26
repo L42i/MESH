@@ -54,7 +54,7 @@ SC_ADDRESS = "/entropy"  # address SC will listen to
 sc_client = udp_client.SimpleUDPClient(SC_IP, SC_PORT)
 
 # VIDEO CAPTURE & BACKGROUND MODEL
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 backsub = cv2.createBackgroundSubtractorMOG2(history=300, varThreshold=40)
 
 prev_gray = None

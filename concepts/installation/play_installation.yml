@@ -4,7 +4,8 @@
   become: false
 
   vars:
-    install_dir: "/home/{{ ansible_user }}/Desktop/MESH/concepts/installation"
+    python_path: "/home/{{ ansible_user }}/Desktop/MESH/concepts/opencv/cv_vector.py"
+    sc_path: "/home/{{ ansible_user }}/Desktop/MESH/concepts/installation/soundscape.scd"
     jack_hw_device: "hw:Gen"
 
   tasks:
@@ -19,21 +20,22 @@
       async: 1
       poll: 0
 
-    - name: Run SuperCollider soundscape on Pis
-      ansible.builtin.shell: |
-        export QT_QPA_PLATFORM=offscreen
-        cd {{ install_dir }}
-        sclang soundscape.scd
-      async: 3600
-      poll: 0
-      args:
-        executable: /bin/bash
-
     - name: Run OpenCV motion script on Pi display
       become: true
       become_user: student
       environment:
         DISPLAY: ":0"
-      ansible.builtin.command: python3 {{ install_dir }}/cv_test_vector.py
+      ansible.builtin.command: python3 {{ python_path }} 
       async: 3600
       poll: 0
+
+    - name: Run SuperCollider soundscape on Pis
+      ansible.builtin.shell: |
+        export QT_QPA_PLATFORM=offscreen
+        sclang {{ sc_path }}
+      async: 3600
+      poll: 0
+      args:
+        executable: /bin/bash
+
+
