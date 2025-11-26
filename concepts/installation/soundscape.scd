@@ -1,5 +1,3 @@
-#!/usr/bin/env sclang
-
 s.waitForBoot {
 
     // ---------------------------------
