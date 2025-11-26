@@ -1,5 +1,5 @@
 ---
-- name: Motion soundscape --> Pis
+- name: Installation --> Pis
   hosts: pis
   become: false
 
@@ -37,5 +37,24 @@
       poll: 0
       args:
         executable: /bin/bash
+
+
+- name: Installation --> Bees
+  hosts: bees
+  become: false  
+
+  vars: 
+    processing_dir: "{{ ansible_env.HOME }}/Desktop/MESH/concepts/installation/osc_installation"
+
+  tasks: 
+
+    - name: Run Processing sketch on the remote display
+      become: false
+      environment:
+        DISPLAY: ":1"   
+        XAUTHORITY: "/home/{{ ansible_user }}/.Xauthority"
+      ansible.builtin.command: nohup processing-java --sketch={{ processing_dir }} --run
+      async: 9000
+      poll: 0
 
 

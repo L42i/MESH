@@ -3,7 +3,7 @@ import numpy as np
 from pythonosc import udp_client
 import math
 import socket
-from screeninfo import get_monitors  # <-- screeninfo only
+from screeninfo import get_monitors  
 
 # Detect primary monitor resolution
 monitor = get_monitors()[0]
@@ -40,7 +40,7 @@ device_ip = get_ip().replace(".", "_")
 # OSC SETTINGS
 # ==========================
 
-# Remote bikes (unchanged)
+# Bees
 OSC_IPS = ["10.10.10.19", "10.10.10.20", "10.10.10.21"]
 OSC_PORT = 9001
 OSC_ADDRESS = "/motion" + device_ip
@@ -115,7 +115,7 @@ while True:
     # Send OSC entropy
     # ----------------------------
 
-    # To remote bikes
+    # To bees
     for client in clients:
         client.send_message(OSC_ADDRESS, float(entropy))
 

@@ -3,11 +3,17 @@ import numpy as np
 from pythonosc import udp_client
 import math
 import socket
-from screeninfo import get_monitors  # <-- screeninfo only
+from screeninfo import get_monitors  
 
 # Detect primary monitor resolution
 monitor = get_monitors()[0]
 screen_w, screen_h = monitor.width, monitor.height
+new_w = screen_w
+new_h = screen_h
+
+# use this later
+max_angle = 0
+
 
 def map_range(value, input_start, input_end, output_start, output_end):
     """
@@ -26,6 +32,7 @@ def map_range(value, input_start, input_end, output_start, output_end):
     # Convert the 0-1 range into a value in the output range
     return output_start + (value_scaled * output_span)
 
+
 # Get device IP
 def get_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -37,6 +44,7 @@ def get_ip():
     finally:
         s.close()
     return ip
+
 
 device_ip = get_ip().replace(".", "_")
 
@@ -67,7 +75,7 @@ while True:
     frame = cv2.flip(frame, 1)
     h, w = frame.shape[:2]
     total_pixels = w * h
-    #print(h, w)
+    # print(h, w)
 
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     if prev_gray is None:
@@ -77,8 +85,8 @@ while True:
     # Motion mask
     mask = backsub.apply(frame)
     _, mask = cv2.threshold(mask, 200, 255, cv2.THRESH_BINARY)
-    #mask = cv2.medianBlur(mask, 11)
-    #mask = cv2.dilate(mask, None, iterations=2)
+    # mask = cv2.medianBlur(mask, 11)
+    # mask = cv2.dilate(mask, None, iterations=2)
     motion_pixels = np.count_nonzero(mask)
 
     # Entropy
@@ -109,14 +117,20 @@ while True:
             if mask[y, x] < 128:
                 continue
             fx, fy = flow[y, x]
+
             end_x = int(x + fx * 5)
             end_y = int(y + fy * 5)
-
             radians = math.atan2(fy, fx)
             degrees = abs(math.degrees(radians))
 
+            absolute = math.sqrt(fx ** 2 + fy ** 2)
+
+            if absolute > 60:
+                max_angle = degrees
+
             mapped_val = map_range(int(degrees), 0, 360, 0, 255)
-            hsv_color = np.uint8([[[int(mapped_val), 180 + math.sin(mapped_val)*180/(2*np.pi), 255]]])  # Hue=0 (red), Saturation=255, Value=255
+            hsv_color = np.uint8([[[int(mapped_val), 180 + math.sin(mapped_val) * 180 / (2 * np.pi),
+                                    255]]])  # Hue=0 (red), Saturation=255, Value=255
             bgr_color = cv2.cvtColor(hsv_color, cv2.COLOR_HSV2BGR)[0][0]
 
             r = int(bgr_color[0])
@@ -126,20 +140,25 @@ while True:
             cv2.arrowedLine(img,
                             (x, y),
                             (end_x, end_y),
-                            (b,g,r),
+                            (b, g, r),
                             1,
                             tipLength=0.4)
 
-    new_w = screen_w
-    new_h = screen_h
-    print(screen_w, screen_h)
+    cv2.putText(img,
+                f"max change angle: {max_angle:.4f}",
+                (20, 80),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                1.0,
+                (255, 255, 255),
+                2)
+
     img_resized = cv2.resize(img, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
 
     # Black canvas and center the image
     canvas = np.zeros((screen_h, screen_w, 3), dtype=np.uint8)
     x_offset = (screen_w - new_w) // 2
     y_offset = (screen_h - new_h) // 2
-    canvas[y_offset:y_offset+new_h, x_offset:x_offset+new_w] = img_resized
+    canvas[y_offset:y_offset + new_h, x_offset:x_offset + new_w] = img_resized
 
     cv2.imshow("Motion Mask", canvas)
 
