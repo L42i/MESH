@@ -2,7 +2,7 @@
 // Usage: sclang play_wav.scd /path/to/file.wav
 
 var path    = thisProcess.argv[0];  // assuming you call: sclang play_wav.scd /path/to/file.wav
-var outname = thisProcess.nowExecutingPath.dirname ++ '_' ++ Date.localtime.stamp;
+var outname = '/home/student/Desktop/Recordings/'  ++ Date.localtime.stamp;
 
 s.waitForBoot {
 
