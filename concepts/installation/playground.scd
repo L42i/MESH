@@ -6,7 +6,7 @@ s.waitForBoot({
     // CONFIG
     // --------------------------------------
     // Base path that contains "hot" and "cold" folders
-    ~basePath = "/home/student/Desktop/MESH/media/";  // <-- adjust if needed
+    ~basePath = "/home/student/Desktop/MESH/media/PLAYGROUND";  // <-- adjust if needed
 
     // Simple looper SynthDef (mono file → stereo out)
     SynthDef(\looper, { |out = 0, bufnum = 0, amp = 0.8|
