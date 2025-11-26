@@ -1,5 +1,3 @@
-#!/usr/bin/env sclang
-
 s.waitForBoot {
 
     // ---------------------------------
@@ -12,7 +10,7 @@ s.waitForBoot {
     var distHigh = 0.75;
 
     // Path to media folder next to this .scd file
-    ~mediaPath = PathName(thisProcess.nowExecutingPath).pathOnly ++ "media/";
+	~mediaPath = '/home/student/Desktop/MESH/concepts/installation/media/';
 
     // Load 0.wav .. 7.wav
     ~buffers = Array.fill(numSounds, { |i|
