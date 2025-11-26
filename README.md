@@ -1,5 +1,12 @@
 # MESH
 
+## Prepare
+
+After cloning this repository, download the media (audio and video files) and place them in a directory ``media/`` in the root directory of this repository.
+
+Current home of the media is only accessible with GaTech credentials:
+https://gtvault.sharepoint.com/:f:/s/L42II-CIC_Asia/IgCdoEeOcv1BTbRsNfRwcvLZAYwcsakacRHTjUhNamec9Gs?e=gvjCoL
+
 
 
 ## Getting Started
