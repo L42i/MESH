@@ -5,58 +5,60 @@ s.waitForBoot({
     // --------------------------------------
     // CONFIG
     // --------------------------------------
-    // Base path that contains "hot" and "cold" folders
-    ~basePath = "/home/student/Desktop/media/Marine";  // <-- adjust if needed
+    ~basePath = "/home/student/Desktop/media/PLAYGROUND";  // no trailing slash
 
-    // Simple looper SynthDef (mono file → stereo out)
+    // Simple looper SynthDef
     SynthDef(\looper, { |out = 0, bufnum = 0, amp = 0.8|
         var sig;
         sig = PlayBuf.ar(
-            numChannels: 1,      // change to 2 if your files are stereo
+            numChannels: 1,
             bufnum: bufnum,
             rate: 1,
             loop: 0,
             doneAction: 2
         );
-        sig = sig * amp;
-        Out.ar(out, sig ! 2);    // duplicate to stereo
+        Out.ar(out, (sig * amp) ! 2);
     }).add;
 
     // --------------------------------------
     // MAIN LOOP
     // --------------------------------------
     ~playRandomLoop = Routine {
-        var fileIndex, fullPath, buffer;
+        var folder, fileIndex, fullPath, buffer;
 
         inf.do {
 
+            // Pick "hot" or "cold" randomly
+            folder = ["hot", "cold"].choose;
 
             // Pick random number 0..7
             fileIndex = (0..7).choose;
 
-            // Build full path:  "/base/hot/3.wav"
-            fullPath = ~basePath ++ "/" ++ fileIndex.asString ++ ".wav";
+            // Build full path
+            fullPath = ~basePath ++ "/" ++ folder ++ "/" ++ fileIndex.asString ++ ".wav";
 
+            ("Folder chosen: " ++ folder).postln;
+            ("File chosen: " ++ fileIndex.asString ++ ".wav").postln;
             ("Full path: " ++ fullPath).postln;
 
-            // Load buffer
+            // Load
             buffer = Buffer.read(s, fullPath);
             s.sync;
 
-            // Play once using SynthDef 'looper'
+            // Play
             Synth(\looper, [
                 \bufnum, buffer.bufnum,
                 \amp, 0.8
             ]);
 
-            // Wait for file duration
+            // Wait
             buffer.duration.wait;
 
-            // Free buffer
+            // Free
             buffer.free;
         };
     };
 
-    // Start the routine
+    // Start routine
     ~playRandomLoop.play;
 });
