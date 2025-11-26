@@ -6,7 +6,7 @@ s.waitForBoot({
     // CONFIG
     // --------------------------------------
     // Base path that contains "hot" and "cold" folders
-    ~basePath = "/home/student/Desktop/MESH/media/PLAYGROUND";  // <-- adjust if needed
+    ~basePath = "/home/student/Desktop/media/Marine";  // <-- adjust if needed
 
     // Simple looper SynthDef (mono file → stereo out)
     SynthDef(\looper, { |out = 0, bufnum = 0, amp = 0.8|
@@ -26,20 +26,17 @@ s.waitForBoot({
     // MAIN LOOP
     // --------------------------------------
     ~playRandomLoop = Routine {
-        var hotCold, fileIndex, fullPath, buffer;
+        var fileIndex, fullPath, buffer;
 
         inf.do {
-            // Pick either "hot" or "cold"
-            hotCold = ["hot", "cold"].choose;
+
 
             // Pick random number 0..7
             fileIndex = (0..7).choose;
 
             // Build full path:  "/base/hot/3.wav"
-            fullPath = ~basePath ++ hotCold ++ "/" ++ fileIndex.asString ++ ".wav";
+            fullPath = ~basePath ++ "/" ++ fileIndex.asString ++ ".wav";
 
-            ("Selected folder: " ++ hotCold).postln;
-            ("Selected file: " ++ fileIndex.asString ++ ".wav").postln;
             ("Full path: " ++ fullPath).postln;
 
             // Load buffer
