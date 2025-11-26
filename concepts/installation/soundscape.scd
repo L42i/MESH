@@ -10,7 +10,7 @@ s.waitForBoot {
     var distHigh = 0.75;
 
     // Path to media folder next to this .scd file
-	~mediaPath = '/home/student/Desktop/MESH/concepts/installation/media/';
+	~mediaPath = '/home/student/Desktop/MESH/media/';
 
     // Load 0.wav .. 7.wav
     ~buffers = Array.fill(numSounds, { |i|
