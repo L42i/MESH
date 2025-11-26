@@ -10,7 +10,7 @@
       ignore_errors: yes
 
     - name: Kill processing
-      ansible.builtin.command: killall processing-java
+      ansible.builtin.command: pkill -f processing
       ignore_errors: yes
 
     - name: Kill sclang

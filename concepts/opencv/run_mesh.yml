@@ -15,8 +15,8 @@
       environment:
         DISPLAY: ":0"
       ansible.builtin.command: python3 {{ python_dir }}
-      async: 3600
-      pole: 0
+      async: 9000
+      poll: 0
 
 
 - name: Discount --> Bees
@@ -24,7 +24,7 @@
   become: false  
 
   vars: 
-    processing_dir: "{{ ansible_env.HOME }}/Desktop/MESH/concepts/openCV/osc_art"
+    processing_dir: "{{ ansible_env.HOME }}/Desktop/MESH/concepts/opencv/osc_installation"
 
   tasks: 
 
@@ -33,8 +33,11 @@
       environment:
         DISPLAY: ":1"   
         XAUTHORITY: "/home/{{ ansible_user }}/.Xauthority"
-      ansible.builtin.command: processing-java --sketch={{ processing_dir }}
+      ansible.builtin.command: nohup processing-java --sketch={{ processing_dir }} --run
+      async: 9000
+      poll: 0
 
+      
 
 
 
