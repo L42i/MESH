@@ -5,7 +5,7 @@
 
   vars:
     python_path: "/home/{{ ansible_user }}/Desktop/MESH/concepts/opencv/cv_test.py"
-    sc_path: "/home/{{ ansible_user }}/Desktop/MESH/concepts/installation/soundscape.scd"
+    sc_path: "/home/{{ ansible_user }}/Desktop/MESH/concepts/installation/playground.scd"
     jack_hw_device: "hw:Gen"
 
   tasks:
