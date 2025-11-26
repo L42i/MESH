@@ -5,7 +5,7 @@
   tasks:
     - name: Ensure local per-host directory exists
       ansible.builtin.file:
-        path: "../Recordings/{{ inventory_hostname }}"
+        path: "../../Recordings/{{ inventory_hostname }}"
         state: directory
         mode: "0755"
       delegate_to: localhost
@@ -13,6 +13,6 @@
     - name: Synchronize remote directory to per-host local folder
       ansible.posix.synchronize:
         src: /home/student/Desktop/Recordings/
-        dest: "../Recordings/{{ inventory_hostname }}/"
+        dest: "../../Recordings/{{ inventory_hostname }}/"
         mode: pull
         recursive: yes
