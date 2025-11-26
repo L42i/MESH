@@ -68,7 +68,7 @@ ready_for_trigger = True  # hysteresis flag
 
 # Normal window (NOT fullscreen)
 cv2.namedWindow("Motion Mask", cv2.WINDOW_NORMAL)
-cv2.setWindowProperty("Motion Mask", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+#cv2.setWindowProperty("Motion Mask", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
 
 print("Motion entropy + vector field. Press 'q' to exit.")
