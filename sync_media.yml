@@ -7,9 +7,9 @@
     - name: Use rsync to synchronize the folder
       ansible.posix.synchronize:
         # The path on the control machine (Ansible host)
-        src: "./"
+        src: "./media"
         # The path on the remote managed node
-        dest: "{{ ansible_env.HOME }}/Desktop/MESH"
+        dest: "{{ ansible_env.HOME }}/Desktop/MESH/media"
         # Optional parameters for rsync behavior:
         # archive mode (recursive, preserves permissions, ownership, timestamps, etc.)
         archive: true 

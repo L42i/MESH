@@ -1,206 +1,170 @@
 import cv2
 import numpy as np
 from pythonosc import udp_client
+import math
+import socket
+from screeninfo import get_monitors  # <-- screeninfo only
 
-# ----------------------------------------
+# Detect primary monitor resolution
+monitor = get_monitors()[0]
+screen_w, screen_h = monitor.width, monitor.height
+new_w = screen_w
+new_h = screen_h
+
+# use this later
+max_angle = 0
+
+
+def map_range(value, input_start, input_end, output_start, output_end):
+    """
+    Maps a value from one range to another.
+    """
+    # Calculate the ratio of the value's position within the input range (0 to 1)
+    input_span = input_end - input_start
+    output_span = output_end - output_start
+
+    if input_span == 0:
+        # Avoid division by zero if the input range is a single point
+        return output_start
+
+    value_scaled = float(value - input_start) / float(input_span)
+
+    # Convert the 0-1 range into a value in the output range
+    return output_start + (value_scaled * output_span)
+
+
+# Get device IP
+def get_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+    except Exception:
+        ip = "127.0.0.1"
+    finally:
+        s.close()
+    return ip
+
+
+device_ip = get_ip().replace(".", "_")
+
 # OSC SETTINGS
-# ----------------------------------------
-OSC_IP = "127.0.0.1"
-OSC_PORT = 9000
-OSC_ADDRESS = "/motion"
+OSC_IPS = ["10.10.10.19", "10.10.10.20", "10.10.10.21"]
+OSC_PORT = 9001
+OSC_ADDRESS = "/motion" + device_ip
+clients = [udp_client.SimpleUDPClient(ip, OSC_PORT) for ip in OSC_IPS]
 
-client = udp_client.SimpleUDPClient(OSC_IP, OSC_PORT)
-
-# ----------------------------------------import cv2
-import numpy as np
-from pythonosc import udp_client
-
-# ----------------------------------------
-# OSC SETTINGS
-# ----------------------------------------
-OSC_IP = "127.0.0.1"
-OSC_PORT = 9000
-OSC_ADDRESS = "/motion"
-
-client = udp_client.SimpleUDPClient(OSC_IP, OSC_PORT)
-
-# ----------------------------------------
 # VIDEO CAPTURE & BACKGROUND MODEL
-# ----------------------------------------
 cap = cv2.VideoCapture(0)
 backsub = cv2.createBackgroundSubtractorMOG2(history=300, varThreshold=40)
 
-print("Motion highlighting + normalized OSC output. Press 'q' to exit.")
+prev_gray = None
+step = 8  # optical flow sampling step
+
+# Fullscreen window
+cv2.namedWindow("Motion Mask", cv2.WINDOW_NORMAL)
+cv2.setWindowProperty("Motion Mask", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+
+print("Motion entropy + vector field. Press 'q' to exit.")
 
 while True:
     ret, frame = cap.read()
     if not ret:
         break
 
-    frame = cv2.resize(frame, (640, 480))
-    frame =cv2.flip(frame,1)
+    frame = cv2.flip(frame, 1)
     h, w = frame.shape[:2]
+    total_pixels = w * h
+    # print(h, w)
 
-    # ----------------------------------------
-    # MOTION MASK
-    # ----------------------------------------
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    if prev_gray is None:
+        prev_gray = gray
+        continue
+
+    # Motion mask
     mask = backsub.apply(frame)
-
-    # Clean mask
     _, mask = cv2.threshold(mask, 200, 255, cv2.THRESH_BINARY)
-    mask = cv2.medianBlur(mask, 11)
-    mask = cv2.dilate(mask, None, iterations=2)
+    # mask = cv2.medianBlur(mask, 11)
+    # mask = cv2.dilate(mask, None, iterations=2)
+    motion_pixels = np.count_nonzero(mask)
 
-    # Find all motion contours
-    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    # Entropy
+    p = motion_pixels / float(total_pixels)
+    entropy = -p * math.log(p) * 2 if p > 0 else 0.0
 
-    motion_cx, motion_cy = None, None
+    # Send OSC
+    for client in clients:
+        client.send_message(OSC_ADDRESS, float(entropy))
 
-    # ----------------------------------------
-    # COMBINE ALL MOTION AREAS
-    # ----------------------------------------
-    if contours:
-        # Merge all contours into one "motion region"
-        all_pts = np.vstack(contours)
-        x, y, ww, hh = cv2.boundingRect(all_pts)
+    # Optical flow
+    flow = cv2.calcOpticalFlowFarneback(prev_gray, gray, None, 0.5, 3, 15, 3, 5, 1.2, 0)
+    prev_gray = gray
 
-        # Compute center of motion
-        motion_cx = int(x + ww / 2)
-        motion_cy = int(y + hh / 2)
+    # Create visualization
+    img = np.zeros_like(frame)
+    cv2.putText(img,
+                f"entropy: {entropy:.4f}",
+                (20, 40),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                1.0,
+                (255, 255, 255),
+                2)
 
-        # Normalize
-        norm_x = motion_cx / w
-        norm_y = motion_cy / h
 
-        # Send OSC
-        client.send_message(OSC_ADDRESS, [float(norm_x), float(norm_y)])
+    degree_sum = 0;
+    count = 1;
+    # Draw optical flow arrows
+    for y in range(0, h, step):
+        for x in range(0, w, step):
+            if mask[y, x] < 128:
+                continue
+            fx, fy = flow[y, x]
 
-    # -----------------------------------------------------
-    # ARTSY MOTION HIGHLIGHT (GLOW + COLOR WARP)
-    # -----------------------------------------------------
+            end_x = int(x + fx * 5)
+            end_y = int(y + fy * 5)
+            radians = math.atan2(fy, fx)
+            degrees = abs(math.degrees(radians))
 
-    # Background aesthetic filter (slightly posterized)
-    blurred = cv2.GaussianBlur(frame, (13, 13), 0)
-    poster = (blurred // 32) * 32
+            #sum of each angle
+            degree_sum = degree_sum + degrees
+            count = count + 1
 
-    # Make a glowing motion mask
-    glow = cv2.GaussianBlur(mask, (51, 51), 0)
-    glow_f = glow.astype(float) / 255.0
-    glow_f = np.repeat(glow_f[:, :, np.newaxis], 3, axis=2)
+            absolute = math.sqrt(fx ** 2 + fy ** 2)
 
-    # Neon version of frame
-    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-    hsv[:, :, 1] = cv2.add(hsv[:, :, 1], 90)  # saturation boost
-    hsv[:, :, 2] = cv2.add(hsv[:, :, 2], 70)  # brightness boost
-    neon = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+            mapped_val = map_range(int(degrees), 0, 360, 0, 255)
+            hsv_color = np.uint8([[[int(mapped_val), 180 + math.sin(mapped_val) * 180 / (2 * np.pi),
+                                    255]]])  # Hue=0 (red), Saturation=255, Value=255
+            bgr_color = cv2.cvtColor(hsv_color, cv2.COLOR_HSV2BGR)[0][0]
 
-    # Blend neon where motion is
-    result = (poster * (1 - glow_f) + neon * glow_f).astype(np.uint8)
+            r = int(bgr_color[0])
+            b = int(bgr_color[1])
+            g = int(bgr_color[2])
 
-    # Draw center marker
-    if motion_cx is not None:
-        cv2.circle(result, (motion_cx, motion_cy), 12, (0, 255, 255), 2)
-        cv2.putText(result, f"{norm_x:.2f}, {norm_y:.2f}",
-                    (motion_cx + 10, motion_cy - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2)
+            cv2.arrowedLine(img,
+                            (x, y),
+                            (end_x, end_y),
+                            (b, g, r),
+                            1,
+                            tipLength=0.4)
+    average_angle = degree_sum / count / 180
+    cv2.putText(img,
+                f"average angle: {average_angle:.4f}",
+                (20, 80),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                1.0,
+                (255, 255, 255),
+                2)
 
-    # Slight film grain
-    noise = np.random.normal(0, 10, frame.shape).astype(np.int16)
-    result = np.clip(result.astype(np.int16) + noise, 0, 255).astype(np.uint8)
+    img_resized = cv2.resize(img, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
 
-    cv2.imshow("Motion Highlight + OSC", result)
-    cv2.imshow("Motion Mask", mask)  # optional debug window
+    # Black canvas and center the image
+    canvas = np.zeros((screen_h, screen_w, 3), dtype=np.uint8)
+    x_offset = (screen_w - new_w) // 2
+    y_offset = (screen_h - new_h) // 2
+    canvas[y_offset:y_offset + new_h, x_offset:x_offset + new_w] = img_resized
 
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-
-cap.release()
-cv2.destroyAllWindows()
-
-# VIDEO CAPTURE & BACKGROUND MODEL
-# ----------------------------------------
-cap = cv2.VideoCapture(0)
-backsub = cv2.createBackgroundSubtractorMOG2(history=300, varThreshold=40)
-
-print("Motion highlighting + normalized OSC output. Press 'q' to exit.")
-
-while True:
-    ret, frame = cap.read()
-    if not ret:
-        break
-
-    frame = cv2.resize(frame, (640, 480))
-    h, w = frame.shape[:2]
-
-    # ----------------------------------------
-    # MOTION MASK
-    # ----------------------------------------
-    mask = backsub.apply(frame)
-
-    # Clean mask
-    _, mask = cv2.threshold(mask, 200, 255, cv2.THRESH_BINARY)
-    mask = cv2.medianBlur(mask, 11)
-    mask = cv2.dilate(mask, None, iterations=2)
-
-    # Find all motion contours
-    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-    motion_cx, motion_cy = None, None
-
-    # ----------------------------------------
-    # COMBINE ALL MOTION AREAS
-    # ----------------------------------------
-    if contours:
-        # Merge all contours into one "motion region"
-        all_pts = np.vstack(contours)
-        x, y, ww, hh = cv2.boundingRect(all_pts)
-
-        # Compute center of motion
-        motion_cx = int(x + ww / 2)
-        motion_cy = int(y + hh / 2)
-
-        # Normalize
-        norm_x = motion_cx / w
-        norm_y = motion_cy / h
-
-        # Send OSC
-        client.send_message(OSC_ADDRESS, [float(norm_x), float(norm_y)])
-
-    # -----------------------------------------------------
-    # ARTSY MOTION HIGHLIGHT (GLOW + COLOR WARP)
-    # -----------------------------------------------------
-
-    # Background aesthetic filter (slightly posterized)
-    blurred = cv2.GaussianBlur(frame, (13, 13), 0)
-    poster = (blurred // 32) * 32
-
-    # Make a glowing motion mask
-    glow = cv2.GaussianBlur(mask, (51, 51), 0)
-    glow_f = glow.astype(float) / 255.0
-    glow_f = np.repeat(glow_f[:, :, np.newaxis], 3, axis=2)
-
-    # Neon version of frame
-    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-    hsv[:, :, 1] = cv2.add(hsv[:, :, 1], 90)  # saturation boost
-    hsv[:, :, 2] = cv2.add(hsv[:, :, 2], 70)  # brightness boost
-    neon = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
-
-    # Blend neon where motion is
-    result = (poster * (1 - glow_f) + neon * glow_f).astype(np.uint8)
-
-    # Draw center marker
-    if motion_cx is not None:
-        cv2.circle(result, (motion_cx, motion_cy), 12, (0, 255, 255), 2)
-        cv2.putText(result, f"{norm_x:.2f}, {norm_y:.2f}",
-                    (motion_cx + 10, motion_cy - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2)
-
-    # Slight film grain
-    noise = np.random.normal(0, 10, frame.shape).astype(np.int16)
-    result = np.clip(result.astype(np.int16) + noise, 0, 255).astype(np.uint8)
-
-    cv2.imshow("Motion Highlight + OSC", result)
-    cv2.imshow("Motion Mask", mask)  # optional debug window
+    cv2.imshow("Motion Mask", canvas)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break

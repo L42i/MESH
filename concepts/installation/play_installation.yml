@@ -4,7 +4,7 @@
   become: false
 
   vars:
-    python_path: "/home/{{ ansible_user }}/Desktop/MESH/concepts/installation/cv_test_vector.py"
+    python_path: "/home/{{ ansible_user }}/Desktop/MESH/concepts/opencv/cv_test.py"
     sc_path: "/home/{{ ansible_user }}/Desktop/MESH/concepts/installation/soundscape.scd"
     jack_hw_device: "hw:Gen"
 
