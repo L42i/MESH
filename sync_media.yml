@@ -16,6 +16,6 @@
         # compresses file data during the transfer
         compress: true 
         # makes rsync delete files in the dest that are not in the src
-        delete: true 
+        delete: false
         # specifies the transfer direction: 'push' from control to remote (default)
         mode: push 

@@ -29,7 +29,7 @@ s.waitForBoot({
         inf.do {
 
             // Pick "hot" or "cold" randomly
-            folder = ["hot", "cold"].choose;
+            folder = ["Hot", "Cold"].choose;
 
             // Pick random number 0..7
             fileIndex = (0..7).choose;

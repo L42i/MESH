@@ -74,6 +74,10 @@
 
   tasks: 
 
+    - name: Kill processing
+      ansible.builtin.command: pkill -f processing
+      ignore_errors: yes
+
     - name: Run Processing sketch on the remote display
       become: false
       environment:
