@@ -83,7 +83,7 @@
       environment:
         DISPLAY: ":1"   
         XAUTHORITY: "/home/{{ ansible_user }}/.Xauthority"
-      ansible.builtin.command: nohup processing-java --sketch={{ processing_dir }} --run
+      ansible.builtin.command: nohup processing-java --sketch={{ processing_dir }}{{processing}} --run
       async: 9000
       poll: 0
 

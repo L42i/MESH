@@ -132,7 +132,7 @@ while True:
     # Visualization canvas
     img = np.zeros_like(frame)
     cv2.putText(img,
-                f"entropy: {entropy:.4f}",
+                f"Entropy: {entropy:.4f}",
                 (20, 40),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 1.0,
