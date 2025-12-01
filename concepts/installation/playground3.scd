@@ -113,7 +113,7 @@ s.waitForBoot {
 
         // Rising edge: trigger burst broadcast
         if (prev < threshold and: { entropy >= threshold }) {
-            var burstIndex = (0..7).choose;
+            var burstIndex = (0..16).choose;
             var burstPath  = ~basePath ++ "/Bursts/" ++ burstIndex.asString ++ ".wav";
 
             ("[BURST SEND] " ++ burstIndex).postln;
