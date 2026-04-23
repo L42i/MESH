@@ -19,3 +19,8 @@
         delete: true 
         # specifies the transfer direction: 'push' from control to remote (default)
         mode: push 
+
+        rsync_opts:
+        - "--exclude=.git/"
+        - "--exclude=.gitignore"
+        - "--exclude=.gitmodules"
