@@ -1,0 +1,31 @@
+---
+- name: Supercollider Setup
+  hosts: all
+  become: false  
+
+  vars:
+    jack_hw_device: "hw:Gen"   
+
+  tasks:
+    
+    - name: Kill all existing jackd processes
+      ansible.builtin.command: killall jackd
+      ignore_errors: yes
+
+    - name: Start jackd in background with correct env vars
+      ansible.builtin.shell: |
+        export JACK_NO_AUDIO_RESERVATION=1
+        jackd -d alsa -d {{ jack_hw_device }} -r 48000 -p 128 > /home/{{ ansible_user }}/Desktop/jack_log.txt 2>&1
+      async: 1
+      poll: 0
+
+    - name: play the conductor supercollider scripts with sc lang
+      ansible.builtin.shell: |
+        export DISPLAY=:0
+        sclang /home/{{ ansible_user }}/Desktop/MESH/concepts/workshop/{{ workshop }}.scd
+      async: 3600
+      poll: 0
+      args:
+        executable: /bin/bash
+
+    

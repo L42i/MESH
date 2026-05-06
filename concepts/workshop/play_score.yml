@@ -1,0 +1,41 @@
+---
+- name: Video + Audio Setup 
+  hosts: all
+  become: false  
+
+  vars:
+    video_dir: "{{ ansible_env.HOME }}/Desktop/media/DISCOUNT/DiscountVideoScore.mp4"
+    jack_hw_device: "hw:Gen"   
+
+  tasks:
+    
+    - name: Kill all existing jackd processes
+      ansible.builtin.command: killall jackd
+      ignore_errors: yes
+
+    - name: Start jackd in background with correct env vars
+      ansible.builtin.shell: |
+        export JACK_NO_AUDIO_RESERVATION=1
+        jackd -d alsa -d {{ jack_hw_device }} -r 48000 -p 128 > /home/{{ ansible_user }}/Desktop/jack_log.txt 2>&1
+      async: 1
+      poll: 0
+
+    - name: play run sc_score on Pis with sclang
+      ansible.builtin.shell: |
+        export QT_QPA_PLATFORM=offscreen
+        sclang /home/{{ ansible_user }}/Desktop/MESH/concepts/workshop/score.scd 
+      async: 3600
+      poll: 0
+      args:
+        executable: /bin/bash
+
+    - name: Play video fullscreen on devices
+      shell: |
+        export DISPLAY=:0
+        nohup vlc --fullscreen --play-and-exit "{{ video_dir }}" \
+          >/dev/null 2>&1 &
+      async: 5
+      poll: 0
+
+      
+    

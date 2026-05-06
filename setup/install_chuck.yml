@@ -1,0 +1,26 @@
+---
+- name: Install ChucK on Raspberry Pis
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Update apt package cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install ChucK and audio utilities
+      apt:
+        name:
+          - chuck
+          - chuck-data
+        state: present
+
+    - name: Check ChucK version
+      command: chuck --version
+      register: chuck_version
+      changed_when: false
+
+    - name: Print ChucK version
+      debug:
+        var: chuck_version.stdout
