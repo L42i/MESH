@@ -1,6 +1,8 @@
 @import "granular.ck"
 
-Granular g(me.dir() + "water.wav") => dac;
+Granular g(me.dir() + "water.wav") => NRev rev => dac;
+
+0.1 => rev.mix;
 
 Event message;
 float entropy;
