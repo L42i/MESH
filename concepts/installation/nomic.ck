@@ -1,9 +1,10 @@
 @import "granular.ck"
 
-Granular g("/home/student/Desktop/MESH/concepts/installation/water.wav") => Gain gain => NRev rev => dac;
+Granular g("/home/student/Desktop/MESH/concepts/installation/water.wav") => Gain gain => NRev rev => LPF lpf => dac;
 
 0.1 => rev.mix;
 0.5 => gain.gain;
+1500 => lpf.freq;
 
 Event message;
 float entropy;

@@ -10,18 +10,19 @@ Gain gains2[N];
 Gain gains3[N];
 DelayL delays[N];
 NRev nrevs[N];
+LPF lpfs[N];
 
 int playing[N];
 int numPlaying;
 
-0.95 => float G;
+0.8 => float G;
 1 - G => float G2;
 0.95 => float G3;
 
 adc => adsrs[0];
 
 for (int i; i < N; i++) {
-  adc => lisas[i] => adsrs[i] => nrevs[i] => gains[i] => dac;
+  adc => lpfs[i] => lisas[i] => adsrs[i] => nrevs[i] => gains[i] => dac;
   adsrs[i] => gains2[i] => delays[i] => nrevs[i] => dac;
   delays[i] => gains3[i] => delays[i];
 
@@ -30,6 +31,7 @@ for (int i; i < N; i++) {
   G2 => gains2[i].gain;
   G3 => gains3[i].gain;
   0.1 => nrevs[i].mix;
+  1000 => lpfs[i].freq;
 
   100::ms => delays[i].max;
 
