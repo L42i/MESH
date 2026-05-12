@@ -17,6 +17,10 @@
       ansible.builtin.command: killall sclang
       ignore_errors: yes
 
+    - name: kill chuck
+      shell: pkill chuck || true
+      ignore_errors: yes
+
     - name: Kill spython
       ansible.builtin.command: killall python3
       ignore_errors: yes
@@ -28,4 +32,8 @@
     - name: Kill scsynth
       ansible.builtin.command: killall scsynth
       ignore_errors: yes
+
+    - name: Kill all aplay things
+      command: killall -9 aplay
+      ignore_errors: true
 

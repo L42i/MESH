@@ -1,0 +1,95 @@
+- name: Setup Chrony and Run Timesync
+  hosts: all
+  gather_facts: false
+  become: true
+
+  vars:
+    remote_app_dir: "/home/{{ ansible_user }}/Desktop/MESH/concepts/orlando/offline-libraries"
+    pi1_ip: "10.10.10.11"
+    mesh_subnet: "10.10.10.0/24"
+
+  tasks:
+    - name: Kill all SuperCollider things
+      ansible.builtin.shell: |
+        killall -9 sclang scsynth || true
+
+    - name: Stop and disable systemd-timesyncd
+      ansible.builtin.systemd:
+        name: systemd-timesyncd
+        state: stopped
+        enabled: false
+      ignore_errors: true
+
+    - name: Install chrony from deb
+      ansible.builtin.apt:
+        deb: "{{ remote_app_dir }}/chrony_4.8-3_arm64.deb"
+
+    - name: Configure Pi 1 as Chrony server
+      ansible.builtin.copy:
+        dest: /etc/chrony/chrony.conf
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          driftfile /var/lib/chrony/chrony.drift
+
+          # Allow large time jumps at startup
+          makestep 1.0 -1
+
+          # Pi 1 acts as the LAN time source
+          local stratum 8
+
+          # Allow the MESH LAN to sync from this Pi
+          allow {{ mesh_subnet }}
+
+          rtcsync
+
+          logdir /var/log/chrony
+      when: (ansible_host | default(inventory_hostname)) == pi1_ip
+
+    - name: Configure other Pis to sync from Pi 1
+      ansible.builtin.copy:
+        dest: /etc/chrony/chrony.conf
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          driftfile /var/lib/chrony/chrony.drift
+
+          server {{ pi1_ip }} iburst prefer
+
+          # Allow large time jumps at startup
+          makestep 1.0 -1
+
+          rtcsync
+
+          logdir /var/log/chrony
+      when: (ansible_host | default(inventory_hostname)) != pi1_ip
+
+    - name: Restart chrony
+      ansible.builtin.systemd:
+        name: chrony
+        state: restarted
+        enabled: true
+
+    - name: Wait for Chrony
+      ansible.builtin.pause:
+        seconds: 5
+
+    - name: Show Chrony tracking
+      ansible.builtin.command: chronyc tracking
+      register: chrony_tracking
+      changed_when: false
+
+    - name: Print Chrony tracking
+      ansible.builtin.debug:
+        var: chrony_tracking.stdout_lines
+
+    - name: Show Chrony sources
+      ansible.builtin.command: chronyc sources -v
+      register: chrony_sources
+      changed_when: false
+
+    - name: Print Chrony sources
+      ansible.builtin.debug:
+        var: chrony_sources.stdout_lines
